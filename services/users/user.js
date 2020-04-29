@@ -2,28 +2,28 @@ const express = require("express");
 const User = require("../../models/user");
 
 // deprecated in production for normal users.  Perhaps for admin its useful
-const getUsers = async (req, res, next) => {
-  try {
-    let users = await User.find({});
+// const getUsers = async (req, res, next) => {
+//   try {
+//     let users = await User.find({});
 
-    if (users.length > 0) {
-      return res.status(200).json({
-        message: "users fetched successfully",
-        data: users,
-      });
-    }
+//     if (users.length > 0) {
+//       return res.status(200).json({
+//         message: "users fetched successfully",
+//         data: users,
+//       });
+//     }
 
-    return res.status(404).json({
-      code: "BAD_REQUEST_ERROR",
-      description: "No users found in the system",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      code: "SERVER_ERROR",
-      description: "Something went wrong; please try again.",
-    });
-  }
-};
+//     return res.status(404).json({
+//       code: "BAD_REQUEST_ERROR",
+//       description: "No users found in the system",
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       code: "SERVER_ERROR",
+//       description: "Something went wrong; please try again.",
+//     });
+//   }
+// };
 
 const getUserById = async (req, res, next) => {
   try {
@@ -131,6 +131,43 @@ const loginUser = async (req, res, next) => {
       data: { user, token },
     });
   } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      code: "SERVER_ERROR",
+      description: "something went wrong, Please try again",
+    });
+  }
+};
+
+const logoutUser = async (req, res, next) => {
+  // Log user out of the application
+  try {
+    req.user.tokens = req.user.tokens.filter((token) => {
+      return token.token != req.token;
+    });
+    await req.user.save();
+    res.status(200).json({
+      code: "LOGOUT_SUCCESS",
+      description: "log out successful",
+    });
+  } catch (error) {
+    res.status(500).json({
+      code: "SERVER_ERROR",
+      description: "something went wrong, Please try again",
+    });
+  }
+};
+
+const logoutAll = async (req, res, next) => {
+  // Log user out of all devices
+  try {
+    req.user.tokens.splice(0, req.user.tokens.length);
+    await req.user.save();
+    res.status(200).json({
+      code: "LOGOUT_SUCCESS",
+      description: "log out successful",
+    });
+  } catch (error) {
     res.status(500).json({
       code: "SERVER_ERROR",
       description: "something went wrong, Please try again",
@@ -210,11 +247,13 @@ const deleteUser = async (req, res, next) => {
 };
 
 module.exports = {
-  getUsers,
+  // getUsers,
   getUserById,
   getLoggedInUser,
   createUser,
   loginUser,
+  logoutUser,
+  logoutAll,
   updateUser,
   deleteUser,
 };

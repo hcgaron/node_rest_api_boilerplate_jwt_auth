@@ -5,14 +5,20 @@ let router = express.Router();
 
 // router.get("/", userService.getUsers);
 
-router.get("/users/me", auth, userService.getLoggedInUser);
+router.get("/me", auth, userService.getLoggedInUser);
 
-router.get("/:id", userService.getUserById);
+router.get("/:id", auth, userService.getUserById);
 
 router.post("/", userService.createUser);
 
-router.put("/:id", userService.updateUser);
+router.post("/login", userService.loginUser);
 
-router.delete("/:id", userService.deleteUser);
+router.post("/me/logout", auth, userService.logoutUser);
+
+router.post("/users/logoutall", auth, userService.logoutAll);
+
+router.put("/:id", auth, userService.updateUser);
+
+router.delete("/:id", auth, userService.deleteUser);
 
 module.exports = router;
