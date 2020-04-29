@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../../models/user");
 
+// deprecated in production for normal users.  Perhaps for admin its useful
 const getUsers = async (req, res, next) => {
   try {
     let users = await User.find({});
@@ -46,9 +47,17 @@ const getUserById = async (req, res, next) => {
   }
 };
 
+const getLoggedInUser = async (req, res, next) => {
+  // View logged in uesr profile (auth has already been run)
+  res.status(200).json({
+    code: "SUCCESS",
+    data: req.user,
+  });
+};
+
 const createUser = async (req, res, next) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, password } = req.body;
     if (name === undefined || name === "") {
       return res.status(422).json({
         code: "REQUIRED_FIELD_MISSING",
@@ -77,19 +86,52 @@ const createUser = async (req, res, next) => {
       });
     }
 
-    const temp = { name, email };
+    if (password === undefined || password === "") {
+      return res.status(400).json({
+        code: "INVALID_PASSWORD",
+        description: "password field is required",
+        field: "password",
+      });
+    }
+
+    const temp = { name, email, password };
     let newUser = await User.create(temp);
+    const token = await newUser.generateAuthToken();
 
     if (newUser) {
       return res.status(201).json({
         message: "user created successfully",
-        data: newUser,
+        data: { newUser, token },
       });
     } else {
       throw new Error("something went wrong");
     }
   } catch (error) {
     return res.status(500).json({
+      code: "SERVER_ERROR",
+      description: "something went wrong, Please try again",
+    });
+  }
+};
+
+const loginUser = async (req, res, next) => {
+  // login a registered user
+  try {
+    const { email, password } = req.body;
+    const user = await User.findByCredentials(email, password);
+    if (!user) {
+      return res.status(401).json({
+        code: "AUTHORIZATION_FAIL",
+        description: "Login failed! Check authentication credentials",
+      });
+    }
+    const token = await user.generateAuthToken();
+    res.status(200).json({
+      code: "LOGIN_SUCCESSFUL",
+      data: { user, token },
+    });
+  } catch (error) {
+    res.status(500).json({
       code: "SERVER_ERROR",
       description: "something went wrong, Please try again",
     });
@@ -139,7 +181,6 @@ const updateUser = async (req, res, next) => {
       throw new Error("something went wrong");
     }
   } catch (error) {
-    console.log(error);
     return res.status(500).json({
       code: "SERVER_ERROR",
       description: "something went wrong, Please try again",
@@ -171,7 +212,9 @@ const deleteUser = async (req, res, next) => {
 module.exports = {
   getUsers,
   getUserById,
+  getLoggedInUser,
   createUser,
+  loginUser,
   updateUser,
   deleteUser,
 };

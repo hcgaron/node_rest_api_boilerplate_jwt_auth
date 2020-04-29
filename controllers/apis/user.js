@@ -1,8 +1,11 @@
 const express = require("express");
+const auth = require("../../middleware/auth");
 const userService = require("../../services/users/user");
 let router = express.Router();
 
-router.get("/", userService.getUsers);
+// router.get("/", userService.getUsers);
+
+router.get("/users/me", auth, userService.getLoggedInUser);
 
 router.get("/:id", userService.getUserById);
 
