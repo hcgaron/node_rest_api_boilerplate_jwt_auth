@@ -271,4 +271,100 @@ describe("auth middleware", function () {
     expect(authenticateResTwo.body.data.tokens.length).to.be.equal(1);
     done();
   });
+
+  it("should update the logged in user", async function (done) {
+    const email = "delilah@moose.com";
+    const password = "delilahDog7";
+
+    const newUser = stringifyUserSignup("delilah", email, password);
+
+    const res = await createUser(newUser);
+    const credentials = {
+      email: res.body.data.newUser.email,
+      password,
+    };
+    const token = res.body.data.token;
+
+    const updatedUser = JSON.stringify({
+      name: "anubis",
+      email: "anubis@anubis.com",
+    });
+
+    // update user
+    const updateRes = await request(app)
+      .put(`/api/v1/users/me/update`)
+      .send(updatedUser)
+      .set("Content-Type", "application/json")
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(updateRes.body.data.name).to.be.equal("anubis");
+    done();
+  });
+
+  it("should fail to update a user that is not logged in", async function (done) {
+    const email = "delilah@moose.com";
+    const password = "delilahDog7";
+
+    const newUser = stringifyUserSignup("delilah", email, password);
+
+    const res = await createUser(newUser);
+    const credentials = {
+      email: res.body.data.newUser.email,
+      password,
+    };
+    const token = res.body.data.token;
+    const idOne = res.body.data.newUser._id;
+
+    const updatedUser = JSON.stringify({
+      name: "anubis",
+      email: "anubis@anubis.com",
+    });
+
+    // update user attempt while not logged in
+    const updateRes = await request(app)
+      .put(`/api/v1/users/me/update`)
+      .send(updatedUser)
+      .set("Content-Type", "application/json")
+      .set("Accept", "application/json");
+
+    expect(updateRes.status).to.be.equal(401);
+    done();
+  });
+
+  it("should delete a logged in user", async function (done) {
+    const email = "delilah@moose.com";
+    const password = "delilahDog7";
+
+    const newUser = stringifyUserSignup("delilah", email, password);
+
+    const res = await createUser(newUser);
+    const deleteRes = await request(app)
+      .delete("/api/v1/users/me/delete")
+      .set("Content-Type", "application/json")
+      .set("Accept", "application/json")
+      .set("Authorization", `Bearer ${res.body.data.token}`);
+
+    // delete user
+    expect(deleteRes.body.message).to.be.equal(
+      `user with id ${res.body.data.newUser._id} deleted successfully`
+    );
+    done();
+  });
+
+  it("should fail to delete a user that is not logged in", async function (done) {
+    const email = "delilah@moose.com";
+    const password = "delilahDog7";
+
+    const newUser = stringifyUserSignup("delilah", email, password);
+
+    const res = await createUser(newUser);
+    const deleteRes = await request(app)
+      .delete("/api/v1/users/me/delete")
+      .set("Content-Type", "application/json")
+      .set("Accept", "application/json");
+
+    expect(deleteRes.status).to.be.equal(401);
+    done();
+  });
 });

@@ -177,7 +177,8 @@ const logoutAll = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
-    const userId = req.params.id;
+    // const userId = req.params.id;
+    const user = req.user;
     const { name, email } = req.body;
 
     if (name === undefined || name === "") {
@@ -196,7 +197,7 @@ const updateUser = async (req, res, next) => {
       });
     }
 
-    let isUserExists = await User.findById(userId);
+    let isUserExists = await User.findById(user._id);
     if (!isUserExists) {
       return res.status(404).json({
         code: "BAD_REQUEST_ERROR",
@@ -205,7 +206,7 @@ const updateUser = async (req, res, next) => {
     }
 
     const temp = { name, email };
-    let updatedUser = await User.findByIdAndUpdate(userId, temp, {
+    let updatedUser = await User.findByIdAndUpdate(user._id, temp, {
       new: true,
     });
 
@@ -218,6 +219,7 @@ const updateUser = async (req, res, next) => {
       throw new Error("something went wrong");
     }
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       code: "SERVER_ERROR",
       description: "something went wrong, Please try again",
@@ -227,10 +229,11 @@ const updateUser = async (req, res, next) => {
 
 const deleteUser = async (req, res, next) => {
   try {
-    let user = await User.findByIdAndRemove(req.params.id);
+    let user = await User.findByIdAndRemove(req.user._id);
     if (user) {
-      return res.status(204).json({
-        message: `user with id ${req.params.id} deleted successfully`,
+      console.log("deleting user!");
+      return res.status(200).json({
+        message: `user with id ${req.user._id} deleted successfully`,
       });
     }
 

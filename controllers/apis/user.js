@@ -17,8 +17,8 @@ router.post("/me/logout", auth, userService.logoutUser);
 
 router.post("/me/logoutall", auth, userService.logoutAll);
 
-router.put("/:id", auth, userService.updateUser);
+router.put("/me/update", auth, userService.updateUser);
 
-router.delete("/:id", auth, userService.deleteUser);
+router.delete("/me/delete", auth, userService.deleteUser);
 
 module.exports = router;
