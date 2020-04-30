@@ -6,4 +6,6 @@ const db = require("./configs/db");
 server.create(config, db);
 
 // start the server
-server.start();
+const running = server.start();
+
+module.exports = running;
