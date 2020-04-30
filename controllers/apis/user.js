@@ -15,7 +15,7 @@ router.post("/login", userService.loginUser);
 
 router.post("/me/logout", auth, userService.logoutUser);
 
-router.post("/users/logoutall", auth, userService.logoutAll);
+router.post("/me/logoutall", auth, userService.logoutAll);
 
 router.put("/:id", auth, userService.updateUser);
 
